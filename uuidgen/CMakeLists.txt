@@ -3,7 +3,7 @@ project(uuidgen VERSION 1.1.0) # Compat version with i2clib40 from aminet
 get_verstring(VERSTRING)
 
 add_link_options(-ffreestanding -nostdlib -nostartfiles -Wl,-e,__start)
-add_compile_options(-Os -m68020 -fomit-frame-pointer)
+add_compile_options(-Os -m68000 -fomit-frame-pointer)
 add_compile_definitions(PRIVATE VERSION_STRING="${VERSTRING}")
 
 add_executable(uuidgen
