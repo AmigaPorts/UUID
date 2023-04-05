@@ -6,3 +6,5 @@ get_verstring(VERSTRING)
 
 add_subdirectory(uuid.library)
 add_subdirectory(uuidgen)
+
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/uuid.readme DESTINATION ./)
