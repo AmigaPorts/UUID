@@ -1,0 +1,336 @@
+TABLE OF CONTENTS
+
+uuid.library/UUID_Clear
+uuid.library/UUID_Compare
+uuid.library/UUID_Copy
+uuid.library/UUID_Generate
+uuid.library/UUID_GetNameSpace
+uuid.library/UUID_Pack
+uuid.library/UUID_Parse
+uuid.library/UUID_Unpack
+uuid.library/UUID_Unparse
+
+This is a RFC 4122 compatible uuid library. It supports both time- and
+random-based UUID generators as well as few tiny utilities. The library is
+missing the ability to obtain MAC address (used as the node element of UUID).
+Instead, the node is generated from random noise.
+
+This work has been bassed on the RFC 4122 draft 
+(http://www.apps.ietf.org/rfc/rfc4122.html) and the uuid library from 
+the e2fsprogs package.
+
+uuid.library/UUID_Clear                               uuid.library/UUID_Clear
+
+   NAME
+        UUID_Clear -- Reset UUID to NULL
+    
+   SYNOPSIS
+        UUID_Clear(uuid);
+                    A0
+
+        void UUID_Clear(uuid_t *);
+
+   FUNCTION
+        Fills given UUID with zeros.
+ 
+   INPUTS
+        uuid - Pointer to an UUID which should be cleared. If the pointer
+                is NULL, the function returns immediately. 
+
+   RESULTS
+
+   NOTES
+
+   SEE ALSO
+
+   BUGS
+
+uuid.library/UUID_Compare                           uuid.library/UUID_Compare
+
+   NAME
+        UUID_Compare - compare two UUID entries
+    
+   SYNOPSIS
+        result = UUID_Compare(lhs, rhs);
+          D0                  A0   A1
+        
+        int UUID_Compare(const uuid_t *, const uuid_t *);
+
+   FUNCTION
+        The two identifiers are compared to each other. The result gives
+        lexical relation between both UUIDs.
+    
+   INPUTS
+        lhs - Left-hand side operand for comparison
+        rhs - Right-hand side operand for comparison
+    
+   RESULTS
+        result - The result of performed comparison with following meaning:
+                -2: either lhs or rhs was NULL, no comparison performed
+                -1: lhs is lexically BEFORE rhs
+                 0: lhs and rhs are equal
+                 1: lhs is lexically AFTER rhs
+
+   NOTES
+
+   SEE ALSO
+
+   BUGS
+
+uuid.library/UUID_Copy                                 uuid.library/UUID_Copy
+
+   NAME
+        UUID_Copy - copy UUID
+    
+   SYNOPSIS
+        UUID_Copy(source, dest);
+
+        void UUID_Copy(const uuid_t *, const uuid_t *);
+                             A0              A1
+
+   FUNCTION
+        Copies the UUID from source to destination location. If either is 
+        NULL, the function silently exits without any further action.
+    
+   INPUTS
+        source - Source UUID
+        dest - Destination storage for copied UUID
+    
+   RESULTS
+        result - The result of performed comparison with following meaning:
+                -2: either lhs or rhs was NULL, no comparison performed
+                -1: lhs is lexically BEFORE rhs
+                 0: lhs and rhs are equal
+                 1: lhs is lexically AFTER rhs
+
+   NOTES
+
+   SEE ALSO
+
+   BUGS
+
+uuid.library/UUID_Generate                         uuid.library/UUID_Generate
+
+   NAME
+        UUID_Generate - Create new unique identifier of given type
+
+   SYNOPSIS
+        UUID_Generate(type, uuid);
+                       D0    A0
+        
+        void UUID_Generate(uuid_type_t, uuid_t *);
+
+   FUNCTION
+        Generates new unique identifier of requested type and stores it at
+        specified location. The function can generate both random and time
+        based UUIDs.
+
+   INPUTS
+        type - Type of generated UUID, either UUID_TYPE_DCE_RANDOM or 
+                UUID_TYPE_DCE_TIME. Any other value will terminate the
+                function immediately without any further action.
+        uuid - Storage where the UUID will be stored to. A NULL value
+                is allowed, in that case the function returns immediately.
+    
+   RESULTS
+
+   NOTES
+        The random type UUID should have a slightly stronger entropy, but 
+        on AmigaOS there are no sufficiently strong sources. Therefore, a
+        PRNG algorightm with system time based seed is used instead.
+
+        The time based UUID *should* use the MAC address of the computer, but
+        I wanted to avoid a bsdsocket.library dependency in this place. 
+        On the first use of this function a fully random 6-byte ID is 
+        generated and stored in ENV: so that it persists across reboots.
+
+   SEE ALSO
+
+   BUGS
+
+uuid.library/UUID_GetNameSpace                 uuid.library/UUID_GetNameSpace
+
+   NAME
+        UUID_GetNameSpace - Obtain one of pre-defined namespace UUIDs
+
+   SYNOPSIS
+        UUID_GetNameSpace(nameSpace, uuid);
+                              D0      A0
+        
+        void UUID_GetNameSpace(uuid_namespace_t, uuid_t *);
+
+   FUNCTION
+        Obtains one of pre-defined name space UUIDs and copies it to 
+        specified storage location.
+
+   INPUTS
+        nameSpace - The required namespace. Invalid namespace will fill
+                destination with zeros.
+        uuid - Storage where the UUID will be stored to. A NULL value
+                is allowed, in that case the function returns immediately.
+    
+   RESULTS
+
+   NOTES
+        The rfc4122 considers few pre-defined namespaces which can be 
+        obtained by this function call:
+        
+        UUID_NAMESPACE_DNS:  6ba7b810-9dad-11d1-80b4-00c04fd430c8
+        UUID_NAMESPACE_URL:  6ba7b811-9dad-11d1-80b4-00c04fd430c8
+        UUID_NAMESPACE_OID:  6ba7b812-9dad-11d1-80b4-00c04fd430c8
+        UUID_NAMESPACE_X500: 6ba7b814-9dad-11d1-80b4-00c04fd430c8
+
+        The namespace UUIDs can be used in sha1 hashing algorightms in
+        combination with string values in oder to avoid hash conflicts.
+
+   SEE ALSO
+
+   BUGS
+
+uuid.library/UUID_Pack                                 uuid.library/UUID_Pack
+
+   NAME
+        UUID_Pack - Convert UUID to byte stream in network order
+
+   SYNOPSIS
+        UUID_Pack(uuid, buffer);
+                   A0     A1
+        
+        void UUID_Pack(const uuid_t *, UBYTE *);
+
+   FUNCTION
+        Convert specified UUID to a stream in network byte order. Since
+        680x0 family is BigEndian, the function does normal byte copy of
+        the source to destination.
+
+   INPUTS
+        uuid - pointer to UUID which should be converted. A NULL pointer
+                is allowed, in that case the function returns silently.
+        buffer - destination storage where the UUID will be copied to. A
+                NULL pointer is allowed.
+
+   RESULTS
+
+   NOTES
+        Due to BigEndian nature of 680x0 family, this function has no real
+        use there and has been kept for compatibility with AROS' version
+        of this library.
+
+   SEE ALSO
+        UUID_Unpack
+
+   BUGS
+
+uuid.library/UUID_Parse                               uuid.library/UUID_Parse
+
+   NAME
+        UUID_Parse - convert literal form of UUID to an UUID type
+
+   SYNOPSIS
+        parsed = UUID_Parse(string, uuid);
+          D0                  A0     A1
+        
+        int UUID_Parse(const char *, uuid_t *);
+
+   FUNCTION
+        Convert UUID in literal form to its binary representation. The 
+        literal form has a fixed size of UUID_STRLEN (36) bytes. It must
+        have following form:
+
+            XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+        
+        where each X stands for a hexadecimal digit. Both lower- and 
+        uppercase characters are allowed. The groups of numbers are separa-
+        ted from each other with hypen sign.
+
+   INPUTS
+        string - the UUID string in the form described above. A NULL pointer
+                is allowed, in that case the function terminates immediately.
+        uuid - a destination where parsed UUID will be stored to. A NULL
+                pointer is allowed. In that case the parsing will proceeed.
+
+   RESULTS
+        parsed - The return value of 1 indicates that parsing of the string
+                was successful. The result is given even if there was no
+                storage for parsed UUID given. If a value of 0 is returned,
+                the parsing of the string has failed.
+
+   NOTES
+        Calling UUID_Parse with a pointer to UUID of NULL can be used to test
+        if the string is valid textual representation of an UUID.
+
+   SEE ALSO
+        UUID_Unparse
+
+uuid.library/UUID_Unpack                             uuid.library/UUID_Unpack
+
+   NAME
+        UUID_Unpack - Convert byte stream to UUID
+
+   SYNOPSIS
+        UUID_Unpack(input, uuid);
+                     A0     A1
+        
+        void UUID_Unpack(const UBYTE *, uuid_t *);
+
+   FUNCTION
+        Converts input data in network byte order into an UUID. Since
+        680x0 family is BigEndian, the function does normal byte copy of
+        the source to destination.
+
+   INPUTS
+        input - source buffer which will be converted to an UUID. A NULL
+                pointer is allowed.
+        uuid - pointer to bffer where UUID will be stored. A NULL pointer
+                is allowed, in that case the function returns silently.
+
+   RESULTS
+
+   NOTES
+        Due to BigEndian nature of 680x0 family, this function has no real
+        use there and has been kept for compatibility with AROS' version
+        of this library.
+
+   SEE ALSO
+        UUID_Pack
+
+   BUGS
+
+uuid.library/UUID_Unparse                           uuid.library/UUID_Unparse
+
+   NAME
+        UUID_Unparse - convert binary UUID to its textual form
+
+   SYNOPSIS
+        UUID_Unparse(uuid, string);
+                      A0     A1
+        
+        void UUID_Unparse(const uuid_t *, char *);
+
+   FUNCTION
+        The UUID in its binary form will be converted to a textual repre-
+        sentation stored in the given buffer. The user of the library must
+        ensure that the buffer is of at least UUID_STRLEN (36) bytes size.
+        No trailing 0 will be writen after converted string!
+
+        The textual form consists of series of lowercase hexadecimal digits
+        separated by hypen sign:
+
+            XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+
+   INPUTS
+        uuid - the pointer to UUID which will be converted to textual form.
+                A NULL pointer is allowed, in that case function returns.
+        string - the pointer to destination buffer which MUST be of at least
+                UUID_STRLEN (36 bytes) size. The caller has to take care
+                of terminating the buffer with 0 if it should be used as a
+                C string.
+
+   RESULTS
+
+   NOTES
+
+   SEE ALSO
+        UUID_Parse
+
+   BUGS

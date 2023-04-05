@@ -1,0 +1,18 @@
+==id $Id: uuid_lib.sfd 0.1.0 $
+* "uuid.library"
+==base _UUIDBase
+==basetype APTR
+==libname uuid
+==include <libraries/uuid.h>
+==bias 30
+==public
+int UUID_Compare(const uuid_t *u1, const uuid_t *u2) (A0,A1)
+void UUID_GetNameSpace(uuid_namespace_t NameSpace, uuid_t *uuid) (D0,A0)
+int UUID_Parse(const char *in, uuid_t *uuid) (A0,A1)
+void UUID_Unparse(const uuid_t * uuid, char *out) (A0,A1)
+void UUID_Pack(const uuid_t * uuid, UBYTE *out) (A0,A1)
+void UUID_Unpack(const UBYTE *in, uuid_t *uuid) (A0,A1)
+void UUID_Clear(uuid_t *uuid) (A0)
+void UUID_Copy(const uuid_t * src, uuid_t *dst) (A0,A1)
+void UUID_Generate(uuid_type_t type, uuid_t *uuid) (D0,A0)
+==end
