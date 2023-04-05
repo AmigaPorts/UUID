@@ -23,7 +23,6 @@ add_executable(uuid.library
     src/end.c
 )
 
-
 target_include_directories(uuid.library PRIVATE src)
 target_link_libraries(uuid.library uuid)
 target_compile_definitions(uuid.library PUBLIC
@@ -33,3 +32,6 @@ target_compile_definitions(uuid.library PUBLIC
     LIBRARY_PRIORITY=0)
 
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/uuid.library DESTINATION ./Libs/)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doc DESTINATION ./Developer)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/sfd DESTINATION ./Developer)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include DESTINATION ./Developer)
