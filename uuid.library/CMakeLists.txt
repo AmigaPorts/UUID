@@ -20,6 +20,7 @@ add_executable(uuid.library
     src/uuid_unpack.c
     src/uuid_parse.c
     src/uuid_unparse.c
+    src/sha1.c
     src/end.c
 )
 

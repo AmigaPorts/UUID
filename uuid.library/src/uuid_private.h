@@ -54,4 +54,9 @@ typedef union {
 #define REGARG(arg, reg) arg asm(reg)
 #endif
 
+void sha1(
+    REGARG(const char * string, "a0"),
+    REGARG(ULONG h[5], "a1"),
+    REGARG(struct uuid_base * UUIDBase, "a6"));
+
 #endif /*UUID_PRIVATE_H_*/
