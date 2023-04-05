@@ -8,7 +8,7 @@ static char value(char chr)
     else if (chr >= 'a' && chr <= 'f')
         chr = 10 + (chr - 'a');
     else if (chr >= 'A' && chr <= 'F')
-        chr = 10 + (chr - 'F');
+        chr = 10 + (chr - 'A');
     
     return chr;
 }
