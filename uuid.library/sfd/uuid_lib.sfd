@@ -15,4 +15,5 @@ void UUID_Unpack(const UBYTE *in, uuid_t *uuid) (A0,A1)
 void UUID_Clear(uuid_t *uuid) (A0)
 void UUID_Copy(const uuid_t * src, uuid_t *dst) (A0,A1)
 void UUID_Generate(uuid_type_t type, uuid_t *uuid) (D0,A0)
+void UUID_GenerateV5(const uuid_t *ns, const char *string, uuid_t *uuid) (A0,A1,A2)
 ==end

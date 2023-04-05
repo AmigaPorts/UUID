@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14.0)
-project(uuid VERSION 1.0.0) # Compat version with i2clib40 from aminet
+project(uuid VERSION 2.0.0) # Compat version with i2clib40 from aminet
 get_verstring(VERSTRING)
 
 add_link_options(-ffreestanding -nostdlib -nostartfiles -Wl,-e,__start)
@@ -15,6 +15,7 @@ add_executable(uuid.library
     src/uuid_compare.c
     src/uuid_copy.c
     src/uuid_generate.c
+    src/uuid_generatev5.c
     src/uuid_getnamespace.c
     src/uuid_pack.c
     src/uuid_unpack.c

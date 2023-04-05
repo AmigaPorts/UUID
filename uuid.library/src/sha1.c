@@ -7,26 +7,14 @@
 #include <stdint.h>
 #include "uuid_private.h"
 
-static int _strlen(const char *str)
-{
-    int i = 0;
-
-    if (str != NULL)
-    {
-        while (*str++) i++;
-    }
-    
-    return i;
-}
-
 void sha1(
-    REGARG(const char * string, "a0"),
+    REGARG(const UBYTE * message, "a0"),
+    REGARG(ULONG length, "d0"),
     REGARG(ULONG h[5], "a1"),
     REGARG(struct uuid_base * UUIDBase, "a6"))
 {
     /* Prepare the string */
     struct ExecBase *SysBase = UUIDBase->uuid_SysBase;
-    int length = _strlen(string);
 
     if (length != 0)
     {
@@ -51,7 +39,7 @@ void sha1(
                 /* Copy string to message block */
                 for (int i=0; i < length; i++)
                 {
-                    ptr.u8[i] = string[i];
+                    ptr.u8[i] = message[i];
                 }
 
                 /* End bit */

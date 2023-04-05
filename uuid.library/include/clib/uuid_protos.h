@@ -29,6 +29,7 @@ void UUID_Unpack(const UBYTE * in, uuid_t * uuid);
 void UUID_Clear(uuid_t * uuid);
 void UUID_Copy(const uuid_t * src, uuid_t * dst);
 void UUID_Generate(uuid_type_t type, uuid_t * uuid);
+void UUID_GenerateV5(const uuid_t * ns, const char * string, uuid_t * uuid);
 
 #ifdef __cplusplus
 }

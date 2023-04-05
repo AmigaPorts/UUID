@@ -56,4 +56,8 @@ typedef ULONG _sfdc_vararg;
       LP2NR(0x4e, UUID_Generate , uuid_type_t, ___type, d0, uuid_t *, ___uuid, a0,\
       , UUID_BASE_NAME)
 
+#define UUID_GenerateV5(___ns, ___string, ___uuid) \
+      LP3NR(0x54, UUID_GenerateV5 , const uuid_t *, ___ns, a0, const char *, ___string, a1, uuid_t *, ___uuid, a2,\
+      , UUID_BASE_NAME)
+
 #endif /* !_INLINE_UUID_H */

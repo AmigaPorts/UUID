@@ -148,6 +148,43 @@ the e2fsprogs package.
 
    BUGS
 
+uuid.library/UUID_GenerateV5                     uuid.library/UUID_GenerateV5
+
+   NAME
+        UUID_Generate - Create new sha-1 and namespace based unique 
+               identifier
+
+   SYNOPSIS
+        UUID_GenerateV5(namespace, string, uuid);
+                           A0        A1     A2
+        
+        void UUID_Generate(const uuid_t *ns, const char *string, 
+               uuid_t *uuid);
+
+   FUNCTION
+        Generates new unique identifier of type 5, i.e. constructed from
+        namespace uuid and a string. The type 5 is using SHA-1 hashing.
+
+   INPUTS
+        namespace - The namespace which should be used when constructing
+                the uuid. A NULL value will terminate the function.
+        string - The name which will be used in combination with namespace
+                to compute the new UUID. A NULL value will terminate the
+                function without computing the UUID.
+        uuid - Storage where the UUID will be stored to. A NULL value
+                is allowed, in that case the function returns immediately.
+    
+   RESULTS
+
+   NOTES
+        The UUID is generated from a string and namespace as described by 
+        rfc4122. Such UUID hashing reduces risk of conflicts within a
+        namespace. 
+        
+   SEE ALSO
+
+   BUGS
+
 uuid.library/UUID_GetNameSpace                 uuid.library/UUID_GetNameSpace
 
    NAME

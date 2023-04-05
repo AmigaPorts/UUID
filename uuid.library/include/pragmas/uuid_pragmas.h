@@ -81,5 +81,11 @@
 #ifdef __CLIB_PRAGMA_AMICALL
  #pragma amicall(UUIDBase, 0x4e, UUID_Generate(d0,a0))
 #endif /* __CLIB_PRAGMA_AMICALL */
+#ifdef __CLIB_PRAGMA_LIBCALL
+ #pragma libcall UUIDBase UUID_GenerateV5 54 a9803
+#endif /* __CLIB_PRAGMA_LIBCALL */
+#ifdef __CLIB_PRAGMA_AMICALL
+ #pragma amicall(UUIDBase, 0x54, UUID_GenerateV5(a0,a1,a2))
+#endif /* __CLIB_PRAGMA_AMICALL */
 
 #endif /* PRAGMAS_UUID_PRAGMAS_H */

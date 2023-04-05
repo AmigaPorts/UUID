@@ -213,6 +213,12 @@ void _UUID_Generate(
     REGARG(uuid_t * uuid, "a0"),
     REGARG(struct uuid_base * UUIDBase, "a6"));
 
+void _UUID_GenerateV5(
+    REGARG(const uuid_t *ns, "a0"),
+    REGARG(const char *string, "a1"),
+    REGARG(uuid_t * uuid, "a2"),
+    REGARG(struct uuid_base * UUIDBase, "a6"));
+
 static ULONG functable[] = {
     (ULONG)OpenLib,
     (ULONG)CloseLib,
@@ -227,6 +233,7 @@ static ULONG functable[] = {
     (ULONG)_UUID_Clear,
     (ULONG)_UUID_Copy,
     (ULONG)_UUID_Generate,
+    (ULONG)_UUID_GenerateV5,
     -1
 };
 

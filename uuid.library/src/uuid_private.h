@@ -55,7 +55,8 @@ typedef union {
 #endif
 
 void sha1(
-    REGARG(const char * string, "a0"),
+    REGARG(const UBYTE * message, "a0"),
+    REGARG(ULONG length, "d0"),
     REGARG(ULONG h[5], "a1"),
     REGARG(struct uuid_base * UUIDBase, "a6"));
 
