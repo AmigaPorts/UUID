@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14.0)
-project(uuid VERSION 2.1.0) # Compat version with i2clib40 from aminet
+project(uuid VERSION 2.2.0) # Compat version with i2clib40 from aminet
 get_verstring(VERSTRING)
 
 add_link_options(-ffreestanding -nostdlib -nostartfiles -Wl,-e,__start)

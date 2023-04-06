@@ -7,6 +7,23 @@
 #include <stdint.h>
 #include "uuid_private.h"
 
+static inline ULONG ROL(ULONG x, int amount)
+{
+    return (x << amount) | (x >> (32 - amount));
+}
+
+static inline ULONG ROR(ULONG x, int amount)
+{
+    return (x >> amount) | (x << (32 - amount));
+}
+
+static inline void CopyBlock(const UBYTE *src, UBYTE *dst, WORD length)
+{
+    if (length == 0) return;
+
+    while(length--) { *dst++ = *src++; }
+}
+
 void sha1(
     REGARG(const UBYTE * message, "a0"),
     REGARG(ULONG length, "d0"),
@@ -18,106 +35,139 @@ void sha1(
 
     if (length != 0)
     {
-        /*
-            Length shall contain bit 1 at end padded with zeros to 64 byte boundary.
-            Finally, at the end of message there must be 64-bit Length.
-        */
-        int padded_length = (length + 3 + 63) & ~63;
+        ULONG bit_length = length << 3;         // Bit length
+        UBYTE bit_length_ext = length >> 29;    // Bit length, MSB
 
         union {
-            char * u8;
+            UBYTE * u8;
             ULONG * u32;
         } ptr;
-        ptr.u8 = AllocMem(padded_length, MEMF_ANY | MEMF_CLEAR);
-        
-        if (ptr.u8 != NULL)
+
+        /* Allocate work buffer */
+        ULONG *w = AllocMem(80 * sizeof(ULONG), MEMF_ANY);
+        ptr.u32 = w;
+
+        if (w != NULL)
         {
-            ULONG *w = AllocMem(80 * 4, MEMF_ANY);
+            enum {
+                NOT_DONE = 0,       // SHA-1 in progress
+                MARKER_WRITTEN,     // End marker written
+                DONE                // SHA-1 completed
+            } state = NOT_DONE;
 
-            if (w != NULL)
+            /* Init sha1 hash */
+            h[0] = 0x67452301;
+            h[1] = 0xEFCDAB89;
+            h[2] = 0x98BADCFE;
+            h[3] = 0x10325476;
+            h[4] = 0xC3D2E1F0;
+
+            while (state != DONE)
             {
-                /* Copy string to message block */
-                for (int i=0; i < length; i++)
+                /* Get 16 longwords from message */
+                if (length >= 64)
                 {
-                    ptr.u8[i] = message[i];
+                    /* Enough data. Copy entire 64 bytes */
+                    CopyBlock(message, ptr.u8, 64);
+                    message += 64;
+                    length -= 64;
                 }
-
-                /* End bit */
-                ptr.u8[length] = 0x80;
-
-                /* Store original length as number of bits */
-                ptr.u32[padded_length / 4 - 1] = length << 3;   /* Bit length! */
-                ptr.u8[padded_length - 5] = length >> 29;       /* overflow stored here! */
-
-                /* Init sha1 hash */
-                h[0] = 0x67452301;
-                h[1] = 0xEFCDAB89;
-                h[2] = 0x98BADCFE;
-                h[3] = 0x10325476;
-                h[4] = 0xC3D2E1F0;
-
-                for (int pos = 0; pos < padded_length; pos+=64)
+                else if (length >= 55)
                 {
-                    /* Get 16 longwords from message */
-                    CopyMem(&ptr.u8[pos], w, 64);
+                    /* Not enough data, but enough to put marker */
+                    CopyBlock(message, ptr.u8, length);
+                    
+                    /* Fill rest of message with zero */
+                    for (int i=length; i < 64; i++)
+                        ptr.u8[i] = 0;
+                    
+                    /* Put marker */
+                    ptr.u8[length] = 0x80;
+                    state = MARKER_WRITTEN;
 
-                    /* Mix remaining 64 words */
-                    for (int i = 16; i < 80; i++)
+                    length = 0;
+                }
+                else
+                {
+                    /* Not enough data, but enough to put marker and size */
+                    CopyBlock(message, ptr.u8, length);
+                    
+                    /* Fill rest of message with zero */
+                    for (int i=length; i < 64; i++)
+                        ptr.u8[i] = 0;
+                    
+                    /* If marker was not yet written, put it now */
+                    if (state != MARKER_WRITTEN)
                     {
-                        w[i] = (w[i-3] ^ w[i-8] ^ w[i-14] ^ w[i-16]);
-                        w[i] = (w[i] >> 31) | (w[i] << 1);
+                        ptr.u8[length] = 0x80;
                     }
 
-                    ULONG a = h[0];
-                    ULONG b = h[1];
-                    ULONG c = h[2];
-                    ULONG d = h[3];
-                    ULONG e = h[4];
+                    /* Put size at end of the block */
+                    ptr.u8[59] = bit_length_ext;
+                    ptr.u8[60] = bit_length >> 24;
+                    ptr.u8[61] = bit_length >> 16;
+                    ptr.u8[62] = bit_length >> 8;
+                    ptr.u8[63] = bit_length >> 0;
 
-                    for (int i=0; i < 80; i++)
-                    {
-                        ULONG f, k;
-
-                        if (i < 20)
-                        {
-                            f = (b & c) | (~b & d);
-                            k = 0x5A827999;
-                        }
-                        else if(i < 40)
-                        {
-                            f = b ^ c ^ d;
-                            k = 0x6ED9EBA1;
-                        }
-                        else if (i < 60)
-                        {
-                            f = (b & c) | (b & d) | (c & d);
-                            k = 0x8F1BBCDC;
-                        }
-                        else
-                        {
-                            f = b ^ c ^ d;
-                            k = 0xCA62C1D6;
-                        }
-
-                        ULONG temp = ((a << 5) | (a >> (32 - 5))) + f + e + k + w[i];
-                        e = d;
-                        d = c;
-                        c = (b << 30) | (b >> 2);
-                        b = a;
-                        a = temp;
-                    }
-
-                    h[0] += a;
-                    h[1] += b;
-                    h[2] += c;
-                    h[3] += d;
-                    h[4] += e;
+                    /* Ready once this iteration is through */
+                    state = DONE;
                 }
 
-                FreeMem(w, 80 * 4);
+                /* Mix remaining 64 words */
+                for (int i = 16; i < 80; i++)
+                {
+                    w[i] = ROL((w[i-3] ^ w[i-8] ^ w[i-14] ^ w[i-16]), 1);
+                }
+
+                ULONG a = h[0];
+                ULONG b = h[1];
+                ULONG c = h[2];
+                ULONG d = h[3];
+                ULONG e = h[4];
+
+                /* For space reasons do SHA-1 rounds in loop */
+                for (int i=0; i < 80; i++)
+                {
+                    ULONG f, k;
+
+                    if (i < 20)
+                    {
+                        f = (b & c) | (~b & d);
+                        k = 0x5A827999;
+                    }
+                    else if(i < 40)
+                    {
+                        f = b ^ c ^ d;
+                        k = 0x6ED9EBA1;
+                    }
+                    else if (i < 60)
+                    {
+                        f = (b & c) | (b & d) | (c & d);
+                        k = 0x8F1BBCDC;
+                    }
+                    else
+                    {
+                        f = b ^ c ^ d;
+                        k = 0xCA62C1D6;
+                    }
+
+                    ULONG temp = ROL(a, 5) + f + e + k + w[i];
+                    e = d;
+                    d = c;
+                    c = ROL(b, 30);
+                    b = a;
+                    a = temp;
+                }
+
+                /* Update hash */
+                h[0] += a;
+                h[1] += b;
+                h[2] += c;
+                h[3] += d;
+                h[4] += e;
             }
-                        
-            FreeMem(ptr.u8, padded_length);
+
+            FreeMem(w, 80 * sizeof(ULONG));
         }
     }
 }
