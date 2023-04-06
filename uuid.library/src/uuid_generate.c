@@ -30,21 +30,35 @@ void _UUID_Generate(
     ReleaseSemaphore(&UUIDBase->uuid_GlobalLock);
 }
 
+/* PRNG using xorshift64* and taking only upper 32 bits */
 static ULONG uuid_rand(struct uuid_base *UUIDBase)
 {
-    return (UUIDBase->uuid_RandomSeed = 
-        UUIDBase->uuid_RandomSeed * 1103515245 + 12345) % 0x7fffffff;
+    uuid_time_t x = UUIDBase->uuid_RandomSeed;
+
+    /* Do xorshift permutation */
+    x ^= x >> 12;
+    x ^= x << 25;
+    x ^= x >> 27;
+
+    /* Update static data */
+    UUIDBase->uuid_RandomSeed = x;
+
+    return (x * 0x2545F4914F6CDD1DULL) >> 32;
 }
 
 static void uuid_generate_random(uuid_t *uuid, struct uuid_base *UUIDBase)
 {
-    UBYTE u[16];
-    int i;
-   
-    for (i=0; i < 16; i++)
-        u[i] = uuid_rand(UUIDBase);
+    union {
+        UBYTE u8[16];
+        ULONG u32[4];
+    } u;
     
-    UUID_Unpack(u, uuid);
+    int i;
+
+    for (i=0; i < 4; i++)
+        u.u32[i] = uuid_rand(UUIDBase);
+    
+    UUID_Unpack(u.u8, uuid);
     
     uuid->clock_seq_hi_and_reserved &= 0x3f;
     uuid->clock_seq_hi_and_reserved |= 0x80;
@@ -93,11 +107,20 @@ static void uuid_get_node(uuid_node_t *node, struct uuid_base *UUIDBase)
                               GVF_BINARY_VAR | GVF_DONT_NULL_TERM) == sizeof(uuid_state_t)))
         {
             int i;
+            union {
+                UBYTE u8[6];
+                struct {
+                    ULONG u32;
+                    UWORD u16;
+                } u48;
+            } u;
             UUIDBase->uuid_State.ts = UUIDBase->uuid_LastTime;
             UUIDBase->uuid_State.cs = uuid_rand(UUIDBase);
+            u.u48.u32 = uuid_rand(UUIDBase);
+            u.u48.u16 = uuid_rand(UUIDBase);
             for (i=0; i < 6; i++)
             {
-                UUIDBase->uuid_State.node.nodeID[i] = uuid_rand(UUIDBase);                
+                UUIDBase->uuid_State.node.nodeID[i] = u.u8[i];
             }
             UUIDBase->uuid_State.node.nodeID[0] |= 0x01;
         }
@@ -123,15 +146,28 @@ static void uuid_get_state(uint16_t *cs, uuid_time_t *timestamp, uuid_node_t *no
                                 GVF_BINARY_VAR | GVF_DONT_NULL_TERM) == sizeof(uuid_state_t)))
         {
             int i;
+            union {
+                UBYTE u8[6];
+                struct {
+                    ULONG u32;
+                    UWORD u16;
+                } u48;
+            } u;
             UUIDBase->uuid_State.ts = UUIDBase->uuid_LastTime;
             UUIDBase->uuid_State.cs = uuid_rand(UUIDBase);
+            u.u48.u32 = uuid_rand(UUIDBase);
+            u.u48.u16 = uuid_rand(UUIDBase);
             for (i=0; i < 6; i++)
             {
-                UUIDBase->uuid_State.node.nodeID[i] = uuid_rand(UUIDBase);                
+                UUIDBase->uuid_State.node.nodeID[i] = u.u8[i];
             }
             UUIDBase->uuid_State.node.nodeID[0] |= 0x01;
         }
         UUIDBase->uuid_Initialized = 1;
+
+        if (DOSBase)
+            SetVar("uuid_state", (UBYTE*)&UUIDBase->uuid_State, sizeof(uuid_state_t),
+                              GVF_BINARY_VAR | GVF_DONT_NULL_TERM | GVF_SAVE_VAR);
     }
     
     *node = UUIDBase->uuid_State.node;

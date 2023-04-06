@@ -9,6 +9,8 @@
 
 #include <libraries/uuid.h>
 
+#include <stdint.h>
+
 typedef struct {
     uuid_time_t  ts;       /* saved timestamp */
     uuid_node_t  node;     /* saved node ID */
@@ -25,7 +27,7 @@ struct uuid_base {
     uuid_state_t            uuid_State;
     uuid_time_t             uuid_NextUpdate;
     uuid_time_t             uuid_LastTime;
-    ULONG                   uuid_RandomSeed;
+    uint64_t                uuid_RandomSeed;
     UWORD                   uuid_UUIDs_ThisTick;
     UBYTE                   uuid_Initialized;
 };
